@@ -24,8 +24,6 @@ class RecipeProvider extends ChangeNotifier {
 
     try {
       _recipes = await _recipeService!.getRecipes();
-    } catch (e) {
-      print('Error loading recipes: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -39,7 +37,6 @@ class RecipeProvider extends ChangeNotifier {
       _recipes.add(recipe);
       notifyListeners();
     } catch (e) {
-      print('Error adding recipe: $e');
       rethrow;
     }
   }
@@ -54,7 +51,6 @@ class RecipeProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error updating recipe: $e');
       rethrow;
     }
   }
@@ -66,7 +62,6 @@ class RecipeProvider extends ChangeNotifier {
       _recipes.removeWhere((r) => r.id == recipeId);
       notifyListeners();
     } catch (e) {
-      print('Error deleting recipe: $e');
       rethrow;
     }
   }

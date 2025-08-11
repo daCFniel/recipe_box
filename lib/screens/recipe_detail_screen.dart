@@ -19,7 +19,6 @@ class RecipeDetailScreen extends StatefulWidget {
 
 class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   late Recipe _recipe;
-  bool _isLoading = false;
 
   @override
   void initState() {
@@ -28,10 +27,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   }
 
   Future<void> _updateRecipe() async {
-    setState(() => _isLoading = true);
     final service = await RecipeService.getInstance();
     await service.updateRecipe(_recipe);
-    setState(() => _isLoading = false);
+    setState(() {});
   }
 
   Future<void> _deleteRecipe() async {
@@ -82,7 +80,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   }
 
   void _resetIngredients() async {
-    _recipe.resetIngredients();
+    setState(() {
+      _recipe.resetIngredients();
+    });
     await _updateRecipe();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -105,38 +105,56 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
               title: Text(
                 _recipe.title,
                 style: theme.textTheme.titleLarge?.copyWith(
-                  color: theme.colorScheme.onPrimaryContainer,
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              background: _recipe.imageUrl != null || _recipe.imagePath != null
-                  ? _recipe.imageUrl != null
-                      ? Image.network(
-                          _recipe.imageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              _buildPlaceholderImage(theme),
-                        )
-                      : Image.asset(
-                          _recipe.imagePath!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              _buildPlaceholderImage(theme),
-                        )
-                  : _buildPlaceholderImage(theme),
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _recipe.imageUrl != null || _recipe.imagePath != null
+                      ? _recipe.imageUrl != null
+                          ? Image.network(
+                              _recipe.imageUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  _buildPlaceholderImage(theme),
+                            )
+                          : Image.asset(
+                              _recipe.imagePath!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  _buildPlaceholderImage(theme),
+                            )
+                      : _buildPlaceholderImage(theme),
+                  const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black54,
+                        ],
+                        stops: [0.5, 1.0],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             actions: [
               IconButton(
                 onPressed: _editRecipe,
-                icon: Icon(
+                icon: const Icon(
                   Icons.edit_rounded,
-                  color: theme.colorScheme.onPrimaryContainer,
+                  color: Colors.white,
                 ),
               ),
               PopupMenuButton<String>(
-                icon: Icon(
+                icon: const Icon(
                   Icons.more_vert,
-                  color: theme.colorScheme.onPrimaryContainer,
+                  color: Colors.white,
                 ),
                 onSelected: (value) {
                   switch (value) {
@@ -214,7 +232,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       child: IngredientsList(
                         ingredients: _recipe.ingredients,
                         onIngredientChanged: (ingredient, isChecked) {
-                          ingredient.isChecked = isChecked;
+                          setState(() {
+                            ingredient.isChecked = isChecked;
+                          });
                           _updateRecipe();
                         },
                       ),

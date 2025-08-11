@@ -16,12 +16,10 @@ class RecipeCard extends StatelessWidget {
     final theme = Theme.of(context);
     
     return Card(
-      elevation: 0,
+      elevation: 2,
+      shadowColor: theme.colorScheme.shadow.withAlpha(26),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: theme.colorScheme.outline.withValues(alpha: 0.2),
-        ),
       ),
       child: InkWell(
         onTap: onTap,
@@ -29,30 +27,27 @@ class RecipeCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (recipe.imageUrl != null || recipe.imagePath != null)
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: recipe.imageUrl != null
-                      ? Image.network(
-                          recipe.imageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              _buildPlaceholderImage(theme),
-                        )
-                      : recipe.imagePath != null
-                          ? Image.asset(
-                              recipe.imagePath!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  _buildPlaceholderImage(theme),
-                            )
-                          : _buildPlaceholderImage(theme),
-                ),
-              )
-            else
-              _buildPlaceholderImage(theme),
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: (recipe.imageUrl != null && recipe.imageUrl!.isNotEmpty)
+                    ? Image.network(
+                        recipe.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildPlaceholderImage(theme),
+                      )
+                    : (recipe.imagePath != null && recipe.imagePath!.isNotEmpty)
+                        ? Image.asset(
+                            recipe.imagePath!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                _buildPlaceholderImage(theme),
+                          )
+                        : _buildPlaceholderImage(theme),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -60,61 +55,36 @@ class RecipeCard extends StatelessWidget {
                 children: [
                   Text(
                     recipe.title,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSurface,
-                    ),
+                    style: theme.textTheme.titleLarge,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
-                  if (recipe.ingredients.isNotEmpty) ...[
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.list_alt_rounded,
-                          size: 16,
-                          color: theme.colorScheme.primary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${recipe.ingredients.length} ingredients',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                  ],
-                  if (recipe.cookingSteps.isNotEmpty)
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.schedule_rounded,
-                          size: 16,
-                          color: theme.colorScheme.secondary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${recipe.cookingSteps.length} steps',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  if (recipe.prepInstructions.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      recipe.prepInstructions,
-                      style: theme.textTheme.bodyMedium?.copyWith(
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.timer_outlined,
+                        size: 16,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                      const SizedBox(width: 4),
+                      Text(
+                        '${recipe.ingredients.length} ingredients',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      const SizedBox(width: 16),
+                      Icon(
+                        Icons.restaurant_menu_outlined,
+                        size: 16,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${recipe.cookingSteps.length} steps',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -131,22 +101,10 @@ class RecipeCard extends StatelessWidget {
       borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
     ),
     child: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.restaurant_menu_rounded,
-            size: 48,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'No image',
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
+      child: Icon(
+        Icons.image_not_supported_outlined,
+        size: 48,
+        color: theme.colorScheme.onSurfaceVariant,
       ),
     ),
   );

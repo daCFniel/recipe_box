@@ -23,7 +23,7 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
   final _ingredientControllers = <TextEditingController>[];
   final _stepControllers = <TextEditingController>[];
   final _imagePicker = ImagePicker();
-  
+
   String? _selectedImagePath;
   String? _selectedImageUrl;
   bool _isLoading = false;
@@ -139,7 +139,9 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
           .toList();
 
       final recipe = Recipe(
-        id: _isEditing ? widget.recipe!.id : DateTime.now().millisecondsSinceEpoch.toString(),
+        id: _isEditing
+            ? widget.recipe!.id
+            : DateTime.now().millisecondsSinceEpoch.toString(),
         title: _titleController.text.trim(),
         imagePath: _selectedImagePath,
         imageUrl: _selectedImageUrl,
@@ -151,7 +153,7 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
       );
 
       final service = await RecipeService.getInstance();
-      
+
       if (_isEditing) {
         await service.updateRecipe(recipe);
       } else {
@@ -175,7 +177,7 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Edit Recipe' : 'Add Recipe'),
