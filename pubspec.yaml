@@ -1,0 +1,23 @@
+name: recipe_box
+description: "Transform your personal recipe collection into a digital cookbook with this intuitive app, featuring interactive ingredient checklists, clear cooking instructions, and charming emoji support!"
+publish_to: "none"
+version: 1.0.0
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.1.0
+  shared_preferences: ^2.0.0
+  image_picker: '>=1.1.2'
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
