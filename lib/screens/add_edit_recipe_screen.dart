@@ -27,7 +27,6 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
   String? _selectedImagePath;
   String? _selectedImageUrl;
   bool _isLoading = false;
-  bool _emojifyIngredients = false;
   bool get _isEditing => widget.recipe != null;
 
   @override
@@ -47,9 +46,6 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
     _prepController.text = recipe.prepInstructions;
     _selectedImagePath = recipe.imagePath;
     _selectedImageUrl = recipe.imageUrl;
-    
-    // Set emojify to true by default when editing existing recipes
-    _emojifyIngredients = true;
 
     for (final ingredient in recipe.ingredients) {
       final controller = TextEditingController(text: ingredient.name);
@@ -104,161 +100,6 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
     });
   }
 
-  // Emoji map for common cooking ingredients and terms
-  static const Map<String, String> _emojiMap = {
-    // Vegetables
-    'onion': '🧅',
-    'onions': '🧅',
-    'tomato': '🍅',
-    'tomatoes': '🍅',
-    'carrot': '🥕',
-    'carrots': '🥕',
-    'potato': '🥔',
-    'potatoes': '🥔',
-    'garlic': '🧄',
-    'bell pepper': '🫑',
-    'bell peppers': '🫑',
-    'corn': '🌽',
-    'broccoli': '🥦',
-    'cucumber': '🥒',
-    'cucumbers': '🥒',
-    'eggplant': '🍆',
-    'avocado': '🥑',
-    'avocados': '🥑',
-    'lettuce': '🥬',
-    'spinach': '🥬',
-    'mushroom': '🍄',
-    'mushrooms': '🍄',
-    // Fruits
-    'apple': '🍎',
-    'apples': '🍎',
-    'banana': '🍌',
-    'bananas': '🍌',
-    'orange': '🍊',
-    'oranges': '🍊',
-    'lemon': '🍋',
-    'lemons': '🍋',
-    'lime': '🍋',
-    'limes': '🍋',
-    'strawberry': '🍓',
-    'strawberries': '🍓',
-    'grape': '🍇',
-    'grapes': '🍇',
-    'cherry': '🍒',
-    'cherries': '🍒',
-    'peach': '🍑',
-    'peaches': '🍑',
-    'watermelon': '🍉',
-    'pineapple': '🍍',
-    // Proteins
-    'chicken': '🍗',
-    'beef': '🥩',
-    'pork': '🥓',
-    'fish': '🐟',
-    'salmon': '🐟',
-    'shrimp': '🍤',
-    'egg': '🥚',
-    'eggs': '🥚',
-    'bacon': '🥓',
-    'ham': '🍖',
-    'turkey': '🦃',
-    // Dairy
-    'milk': '🥛',
-    'cheese': '🧀',
-    'butter': '🧈',
-    'cream': '🥛',
-    'yogurt': '🥛',
-    // Grains & Carbs
-    'bread': '🍞',
-    'rice': '🍚',
-    'pasta': '🍝',
-    'noodles': '🍜',
-    'flour': '🌾',
-    'wheat': '🌾',
-    'oats': '🌾',
-    // Herbs & Spices
-    'basil': '🌿',
-    'parsley': '🌿',
-    'cilantro': '🌿',
-    'mint': '🌿',
-    'rosemary': '🌿',
-    'thyme': '🌿',
-    'oregano': '🌿',
-    'sage': '🌿',
-    'salt': '🧂',
-    'black pepper': '🌶️',
-    'cinnamon': '🟤',
-    'vanilla': '🌿',
-    // Nuts & Seeds
-    'almond': '🥜',
-    'almonds': '🥜',
-    'peanut': '🥜',
-    'peanuts': '🥜',
-    'walnut': '🥜',
-    'walnuts': '🥜',
-    'cashew': '🥜',
-    'cashews': '🥜',
-    'pistachio': '🥜',
-    'pistachios': '🥜',
-    // Liquids
-    'water': '💧',
-    'oil': '🫒',
-    'olive oil': '🫒',
-    'vinegar': '🍶',
-    'wine': '🍷',
-    'beer': '🍺',
-    'juice': '🧃',
-    // Sweet
-    'sugar': '🍯',
-    'honey': '🍯',
-    'syrup': '🍯',
-    'chocolate': '🍫',
-    'cocoa': '🍫',
-    // Other
-    'bean': '🫘',
-    'beans': '🫘',
-    'pea': '🟢',
-    'peas': '🟢',
-    'nut': '🥜',
-    'nuts': '🥜',
-    'seed': '🌱',
-    'seeds': '🌱',
-  };
-
-  String _emojifyText(String text) {
-    if (!_emojifyIngredients) return text;
-    
-    String result = text;
-    
-    // Process each word in the text
-    for (final entry in _emojiMap.entries) {
-      final keyword = entry.key;
-      final emoji = entry.value;
-      
-      // Create regex pattern to match the keyword as a whole word
-      final pattern = RegExp(r'\b' + RegExp.escape(keyword) + r'\b', caseSensitive: false);
-      
-      // Replace matches with the keyword + emoji
-      result = result.replaceAllMapped(pattern, (match) {
-        final matchedText = match.group(0)!;
-        final start = match.start;
-        final end = match.end;
-        
-        // Check if emoji already exists immediately after this word
-        final textAfter = end < result.length ? result.substring(end) : '';
-        final hasEmojiAfter = textAfter.startsWith(' $emoji') || textAfter.startsWith(emoji);
-        
-        // Only add emoji if it doesn't already exist immediately after this word
-        if (!hasEmojiAfter) {
-          return '$matchedText $emoji';
-        }
-        return matchedText;
-      });
-    }
-    
-    return result;
-  }
-
   Future<void> _pickImage() async {
     try {
       final XFile? image = await _imagePicker.pickImage(
@@ -289,22 +130,21 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
       final ingredients = _ingredientControllers
           .map((c) => c.text.trim())
           .where((text) => text.isNotEmpty)
-          .map((name) => Ingredient(name: _emojifyText(name)))
+          .map((name) => Ingredient(name: name))
           .toList();
 
       final steps = _stepControllers
           .map((c) => c.text.trim())
           .where((text) => text.isNotEmpty)
-          .map((text) => _emojifyText(text))
           .toList();
 
       final recipe = Recipe(
         id: _isEditing ? widget.recipe!.id : DateTime.now().millisecondsSinceEpoch.toString(),
-        title: _emojifyText(_titleController.text.trim()),
+        title: _titleController.text.trim(),
         imagePath: _selectedImagePath,
         imageUrl: _selectedImageUrl,
         ingredients: ingredients,
-        prepInstructions: _emojifyText(_prepController.text.trim()),
+        prepInstructions: _prepController.text.trim(),
         cookingSteps: steps,
         createdAt: _isEditing ? widget.recipe!.createdAt : DateTime.now(),
         updatedAt: DateTime.now(),
@@ -377,8 +217,6 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
               _buildPrepSection(theme),
               const SizedBox(height: 24),
               _buildIngredientsSection(theme),
-              const SizedBox(height: 24),
-              _buildEmojifyCheckbox(theme),
               const SizedBox(height: 24),
               _buildStepsSection(theme),
               const SizedBox(height: 24),
@@ -640,63 +478,6 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
             ),
           ),
       ],
-    );
-  }
-
-  Widget _buildEmojifyCheckbox(ThemeData theme) {
-    return Card(
-      elevation: 0,
-      color: theme.colorScheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: theme.colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(
-              Icons.emoji_emotions_outlined,
-              color: theme.colorScheme.primary,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Emojify Ingredients',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    'Automatically add emoji icons to ingredients and steps',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Checkbox(
-              value: _emojifyIngredients,
-              onChanged: (value) {
-                setState(() {
-                  _emojifyIngredients = value ?? false;
-                });
-              },
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

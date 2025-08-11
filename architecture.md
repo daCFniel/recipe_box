@@ -1,7 +1,7 @@
 # Recipe Box App Architecture
 
 ## Overview
-A digital cookbook app that allows users to create and manage personal recipe collections with interactive features including ingredient checklists, prep instructions, and numbered cooking steps with emoji support.
+A digital cookbook app that allows users to create and manage personal recipe collections with interactive features including ingredient checklists, prep instructions, and numbered cooking steps.
 
 ## Core Features
 1. **Recipe Management**: Create, view, edit, and delete recipes
@@ -32,7 +32,7 @@ A digital cookbook app that allows users to create and manage personal recipe co
 ### Key Components
 1. **RecipeCard**: Reusable recipe preview card
 2. **IngredientsList**: Interactive checklist with reset functionality
-3. **CookingSteps**: Numbered list with emoji support
+3. **CookingSteps**: Numbered list
 4. **ImagePicker**: Recipe photo selection component
 
 ## File Structure
