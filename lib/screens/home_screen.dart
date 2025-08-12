@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:recipe_box/models/recipe.dart';
 import 'package:recipe_box/screens/recipe_detail_screen.dart';
@@ -30,8 +31,6 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  
-
   void _navigateToAddRecipe() async {
     final result = await Navigator.push(
       context,
@@ -62,9 +61,20 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Recipe Box',
-          style: theme.textTheme.headlineMedium,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              size: 35,
+              Symbols.lunch_dining,
+              color: theme.textTheme.headlineMedium?.color,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Recipe Box',
+              style: theme.textTheme.headlineMedium,
+            ),
+          ],
         ),
         centerTitle: true,
       ),
@@ -105,7 +115,9 @@ class _HomePageState extends State<HomePage> {
             child: Consumer<RecipeProvider>(
               builder: (context, recipeProvider, child) {
                 final filteredRecipes = recipeProvider.recipes.where((recipe) {
-                  return recipe.title.toLowerCase().contains(_searchController.text.toLowerCase());
+                  return recipe.title
+                      .toLowerCase()
+                      .contains(_searchController.text.toLowerCase());
                 }).toList();
 
                 if (recipeProvider.isLoading) {
