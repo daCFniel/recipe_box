@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:recipe_box/models/recipe.dart';
+import 'package:recipe_box/providers/recipe_provider.dart';
 import 'package:recipe_box/services/recipe_service.dart';
 
 class AddEditRecipeScreen extends StatefulWidget {
@@ -152,12 +154,12 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
         updatedAt: DateTime.now(),
       );
 
-      final service = await RecipeService.getInstance();
+      final recipeProvider = Provider.of<RecipeProvider>(context, listen: false);
 
       if (_isEditing) {
-        await service.updateRecipe(recipe);
+        await recipeProvider.updateRecipe(recipe);
       } else {
-        await service.addRecipe(recipe);
+        await recipeProvider.addRecipe(recipe);
       }
 
       if (mounted) {
@@ -387,8 +389,7 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
                     textCapitalization: TextCapitalization.sentences,
                   ),
                 ),
-                if (_ingredientControllers.length > 1)
-                  IconButton(
+                IconButton(
                     onPressed: () => _removeIngredientField(i),
                     icon: Icon(
                       Icons.remove_circle_outline,
@@ -468,8 +469,7 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
                     textCapitalization: TextCapitalization.sentences,
                   ),
                 ),
-                if (_stepControllers.length > 1)
-                  IconButton(
+                IconButton(
                     onPressed: () => _removeStepField(i),
                     icon: Icon(
                       Icons.remove_circle_outline,

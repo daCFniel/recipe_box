@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:recipe_box/models/recipe.dart';
-import 'package:recipe_box/services/recipe_service.dart';
 import 'package:recipe_box/screens/recipe_detail_screen.dart';
 import 'package:recipe_box/screens/add_edit_recipe_screen.dart';
 import 'package:recipe_box/widgets/recipe_card.dart';
-
+import 'package:provider/provider.dart'; // Import provider
+import 'package:recipe_box/providers/recipe_provider.dart'; // Import RecipeProvider
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,15 +15,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Recipe> _recipes = [];
-  List<Recipe> _filteredRecipes = [];
-  bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadRecipes();
+    // Initialize the provider and load recipes
+    Provider.of<RecipeProvider>(context, listen: false).initialize();
   }
 
   @override
@@ -32,29 +30,7 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  Future<void> _loadRecipes() async {
-    setState(() => _isLoading = true);
-    final service = await RecipeService.getInstance();
-    final recipes = await service.getRecipes();
-    setState(() {
-      _recipes = recipes;
-      _filteredRecipes = recipes;
-      _isLoading = false;
-    });
-  }
-
-  void _filterRecipes(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        _filteredRecipes = _recipes;
-      } else {
-        _filteredRecipes = _recipes
-            .where((recipe) =>
-                recipe.title.toLowerCase().contains(query.toLowerCase()))
-            .toList();
-      }
-    });
-  }
+  
 
   void _navigateToAddRecipe() async {
     final result = await Navigator.push(
@@ -64,7 +40,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
     if (result == true) {
-      _loadRecipes();
+      // No need to call _loadRecipes() here, as the provider will notify listeners
     }
   }
 
@@ -76,7 +52,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
     if (result == true) {
-      _loadRecipes();
+      Provider.of<RecipeProvider>(context, listen: false).loadRecipes();
     }
   }
 
@@ -98,7 +74,12 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: _searchController,
-              onChanged: _filterRecipes,
+              onChanged: (query) {
+                // Filter recipes based on the query
+                // This part needs to be updated to filter the provider's recipes
+                // For now, it will just trigger a rebuild.
+                setState(() {});
+              },
               decoration: InputDecoration(
                 hintText: 'Search recipes...',
                 prefixIcon: const Icon(Icons.search),
@@ -107,7 +88,7 @@ class _HomePageState extends State<HomePage> {
                         icon: const Icon(Icons.clear),
                         onPressed: () {
                           _searchController.clear();
-                          _filterRecipes('');
+                          setState(() {}); // Trigger rebuild to clear filter
                         },
                       )
                     : null,
@@ -121,31 +102,41 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _filteredRecipes.isEmpty
-                    ? _buildEmptyState(theme)
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: _filteredRecipes.length,
-                        itemBuilder: (context, index) {
-                          final recipe = _filteredRecipes[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: RecipeCard(
-                              recipe: recipe,
-                              onTap: () => _navigateToRecipeDetail(recipe),
-                            ),
-                          ).animate().fade();
-                        },
-                      ),
+            child: Consumer<RecipeProvider>(
+              builder: (context, recipeProvider, child) {
+                final filteredRecipes = recipeProvider.recipes.where((recipe) {
+                  return recipe.title.toLowerCase().contains(_searchController.text.toLowerCase());
+                }).toList();
+
+                if (recipeProvider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (filteredRecipes.isEmpty) {
+                  return _buildEmptyState(theme);
+                } else {
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: filteredRecipes.length,
+                    itemBuilder: (context, index) {
+                      final recipe = filteredRecipes[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: RecipeCard(
+                          recipe: recipe,
+                          onTap: () => _navigateToRecipeDetail(recipe),
+                        ),
+                      ).animate().fade();
+                    },
+                  );
+                }
+              },
+            ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _navigateToAddRecipe,
-        backgroundColor: Color.fromARGB(255, 118, 89, 146),
-        foregroundColor: Color.fromARGB(255, 226, 226, 226),
+        backgroundColor: const Color.fromARGB(255, 118, 89, 146),
+        foregroundColor: const Color.fromARGB(255, 226, 226, 226),
         icon: const Icon(Icons.add),
         label: const Text('Add Recipe'),
       ).animate().scale().fadeIn(),

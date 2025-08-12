@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:recipe_box/models/recipe.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 class RecipeCard extends StatelessWidget {
   final Recipe recipe;
@@ -14,7 +16,7 @@ class RecipeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Card(
       elevation: 2,
       shadowColor: theme.colorScheme.shadow.withAlpha(26),
@@ -28,7 +30,8 @@ class RecipeCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16)),
               child: AspectRatio(
                 aspectRatio: 16 / 9,
                 child: (recipe.imageUrl != null && recipe.imageUrl!.isNotEmpty)
@@ -39,8 +42,8 @@ class RecipeCard extends StatelessWidget {
                             _buildPlaceholderImage(theme),
                       )
                     : (recipe.imagePath != null && recipe.imagePath!.isNotEmpty)
-                        ? Image.asset(
-                            recipe.imagePath!,
+                        ? Image.file(
+                            File(recipe.imagePath!),
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
                                 _buildPlaceholderImage(theme),
@@ -63,7 +66,7 @@ class RecipeCard extends StatelessWidget {
                   Row(
                     children: [
                       Icon(
-                        Icons.timer_outlined,
+                        Symbols.grocery,
                         size: 16,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -95,17 +98,21 @@ class RecipeCard extends StatelessWidget {
   }
 
   Widget _buildPlaceholderImage(ThemeData theme) => Container(
-    height: 180,
-    decoration: BoxDecoration(
-      color: theme.colorScheme.surfaceContainerHighest,
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-    ),
-    child: Center(
-      child: Icon(
-        Icons.image_not_supported_outlined,
-        size: 48,
-        color: theme.colorScheme.onSurfaceVariant,
-      ),
-    ),
-  );
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Symbols.lunch_dining,
+                size: 64,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      );
 }

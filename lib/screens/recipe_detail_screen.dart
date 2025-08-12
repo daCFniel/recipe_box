@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:recipe_box/models/recipe.dart';
 import 'package:recipe_box/services/recipe_service.dart';
 import 'package:recipe_box/screens/add_edit_recipe_screen.dart';
 import 'package:recipe_box/widgets/ingredients_list.dart';
 import 'package:recipe_box/widgets/cooking_steps.dart';
+import 'package:flutter_animate/flutter_animate.dart'; // Import this
 
 class RecipeDetailScreen extends StatefulWidget {
   final Recipe recipe;
@@ -19,11 +22,33 @@ class RecipeDetailScreen extends StatefulWidget {
 
 class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   late Recipe _recipe;
+  final ScrollController _scrollController = ScrollController();
+  bool _showActions = true;
 
   @override
   void initState() {
     super.initState();
     _recipe = widget.recipe;
+    _scrollController.addListener(_scrollListener);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollListener() {
+    if (_scrollController.offset > 150 && _showActions) {
+      setState(() {
+        _showActions = false;
+      });
+    } else if (_scrollController.offset <= 150 && !_showActions) {
+      setState(() {
+        _showActions = true;
+      });
+    }
   }
 
   Future<void> _updateRecipe() async {
@@ -94,9 +119,10 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       body: CustomScrollView(
+        controller: _scrollController,
         slivers: [
           SliverAppBar(
             expandedHeight: 250,
@@ -120,8 +146,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                               errorBuilder: (context, error, stackTrace) =>
                                   _buildPlaceholderImage(theme),
                             )
-                          : Image.asset(
-                              _recipe.imagePath!,
+                          : Image.file(
+                              File(_recipe.imagePath!),
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   _buildPlaceholderImage(theme),
@@ -143,46 +169,57 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 ],
               ),
             ),
-            actions: [
-              IconButton(
-                onPressed: _editRecipe,
-                icon: const Icon(
-                  Icons.edit_rounded,
-                  color: Colors.white,
-                ),
-              ),
-              PopupMenuButton<String>(
-                icon: const Icon(
-                  Icons.more_vert,
-                  color: Colors.white,
-                ),
-                onSelected: (value) {
-                  switch (value) {
-                    case 'delete':
-                      _deleteRecipe();
-                      break;
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.delete_outline,
-                          color: theme.colorScheme.error,
+            actions: _showActions
+                ? [
+                    CircleAvatar(
+                      backgroundColor: Colors.black.withAlpha(128),
+                      child: IconButton(
+                        onPressed: _editRecipe,
+                        icon: const Icon(
+                          Icons.edit_rounded,
+                          color: Colors.white,
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Delete',
-                          style: TextStyle(color: theme.colorScheme.error),
+                      ),
+                    ).animate().fade(), // Apply animation here
+                    const SizedBox(width: 8),
+                    CircleAvatar(
+                      backgroundColor: Colors.black.withAlpha(128),
+                      child: PopupMenuButton<String>(
+                        icon: const Icon(
+                          Icons.more_vert,
+                          color: Colors.white,
                         ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                        onSelected: (value) {
+                          switch (value) {
+                            case 'delete':
+                              _deleteRecipe();
+                              break;
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.delete_outline,
+                                  color: theme.colorScheme.error,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Delete',
+                                  style:
+                                      TextStyle(color: theme.colorScheme.error),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ).animate().fade(), // Apply animation here
+                    const SizedBox(width: 8),
+                  ]
+                : null,
           ),
           SliverToBoxAdapter(
             child: Padding(
@@ -297,27 +334,20 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   }
 
   Widget _buildPlaceholderImage(ThemeData theme) => Container(
-    decoration: BoxDecoration(
-      color: theme.colorScheme.surfaceContainerHighest,
-    ),
-    child: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.restaurant_menu_rounded,
-            size: 64,
-            color: theme.colorScheme.onSurfaceVariant,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest,
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Symbols.lunch_dining,
+                size: 64,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            'No image',
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
+        ),
+      );
 }
