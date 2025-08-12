@@ -2,11 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:recipe_box/models/recipe.dart';
-import 'package:recipe_box/services/recipe_service.dart';
 import 'package:recipe_box/screens/add_edit_recipe_screen.dart';
 import 'package:recipe_box/widgets/ingredients_list.dart';
 import 'package:recipe_box/widgets/cooking_steps.dart';
 import 'package:flutter_animate/flutter_animate.dart'; // Import this
+import 'package:provider/provider.dart';
+import 'package:recipe_box/providers/recipe_provider.dart';
 
 class RecipeDetailScreen extends StatefulWidget {
   final Recipe recipe;
@@ -24,6 +25,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   late Recipe _recipe;
   final ScrollController _scrollController = ScrollController();
   bool _showActions = true;
+  bool _isProcessing = false; // New loading state
+
+  static const double _scrollThreshold = 150.0; // Define constant for scroll threshold
 
   @override
   void initState() {
@@ -40,11 +44,11 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   }
 
   void _scrollListener() {
-    if (_scrollController.offset > 150 && _showActions) {
+    if (_scrollController.offset > _scrollThreshold && _showActions) {
       setState(() {
         _showActions = false;
       });
-    } else if (_scrollController.offset <= 150 && !_showActions) {
+    } else if (_scrollController.offset <= _scrollThreshold && !_showActions) {
       setState(() {
         _showActions = true;
       });
@@ -52,9 +56,24 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   }
 
   Future<void> _updateRecipe() async {
-    final service = await RecipeService.getInstance();
-    await service.updateRecipe(_recipe);
-    setState(() {});
+    setState(() => _isProcessing = true);
+    try {
+      final recipeProvider = Provider.of<RecipeProvider>(context, listen: false);
+      await recipeProvider.updateRecipe(_recipe);
+      // After update, fetch the latest recipe from the provider to ensure consistency
+      final updatedRecipe = recipeProvider.getRecipeById(_recipe.id);
+      if (updatedRecipe != null) {
+        setState(() => _recipe = updatedRecipe);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating recipe: $e')),
+        );
+      }
+    } finally {
+      setState(() => _isProcessing = false);
+    }
   }
 
   Future<void> _deleteRecipe() async {
@@ -80,10 +99,21 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
     );
 
     if (confirmed == true) {
-      final service = await RecipeService.getInstance();
-      await service.deleteRecipe(_recipe.id);
-      if (mounted) {
-        Navigator.pop(context, true);
+      setState(() => _isProcessing = true);
+      try {
+        final recipeProvider = Provider.of<RecipeProvider>(context, listen: false);
+        await recipeProvider.deleteRecipe(_recipe.id);
+        if (mounted) {
+          Navigator.pop(context, true); // Pop twice: detail screen and then back to home
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error deleting recipe: $e')),
+          );
+        }
+      } finally {
+        setState(() => _isProcessing = false);
       }
     }
   }
@@ -96,10 +126,23 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       ),
     );
     if (result == true) {
-      final service = await RecipeService.getInstance();
-      final updatedRecipe = await service.getRecipeById(_recipe.id);
-      if (updatedRecipe != null) {
-        setState(() => _recipe = updatedRecipe);
+      setState(() => _isProcessing = true);
+      try {
+        final recipeProvider = Provider.of<RecipeProvider>(context, listen: false);
+        // Reload recipes to ensure the list is up-to-date after editing
+        await recipeProvider.loadRecipes();
+        final updatedRecipe = recipeProvider.getRecipeById(_recipe.id);
+        if (updatedRecipe != null) {
+          setState(() => _recipe = updatedRecipe);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error refreshing recipe after edit: $e')),
+          );
+        }
+      } finally {
+        setState(() => _isProcessing = false);
       }
     }
   }
@@ -143,14 +186,30 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           ? Image.network(
                               _recipe.imageUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  _buildPlaceholderImage(theme),
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                        : null,
+                                  ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) {
+                                // In a real app, you would log this error to a crash reporting service
+                                debugPrint('Error loading network image: $error');
+                                return _buildPlaceholderImage(theme);
+                              },
                             )
                           : Image.file(
                               File(_recipe.imagePath!),
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  _buildPlaceholderImage(theme),
+                              errorBuilder: (context, error, stackTrace) {
+                                // In a real app, you would log this error to a crash reporting service
+                                debugPrint('Error loading file image: $error');
+                                return _buildPlaceholderImage(theme);
+                              },
                             )
                       : _buildPlaceholderImage(theme),
                   const DecoratedBox(
@@ -169,57 +228,68 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 ],
               ),
             ),
-            actions: _showActions
+            actions: _isProcessing
                 ? [
-                    CircleAvatar(
-                      backgroundColor: Colors.black.withAlpha(128),
-                      child: IconButton(
-                        onPressed: _editRecipe,
-                        icon: const Icon(
-                          Icons.edit_rounded,
-                          color: Colors.white,
-                        ),
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       ),
-                    ).animate().fade(), // Apply animation here
-                    const SizedBox(width: 8),
-                    CircleAvatar(
-                      backgroundColor: Colors.black.withAlpha(128),
-                      child: PopupMenuButton<String>(
-                        icon: const Icon(
-                          Icons.more_vert,
-                          color: Colors.white,
-                        ),
-                        onSelected: (value) {
-                          switch (value) {
-                            case 'delete':
-                              _deleteRecipe();
-                              break;
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.delete_outline,
-                                  color: theme.colorScheme.error,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Delete',
-                                  style:
-                                      TextStyle(color: theme.colorScheme.error),
-                                ),
-                              ],
+                    ),
+                  ]
+                : _showActions
+                    ? [
+                        CircleAvatar(
+                          backgroundColor: Colors.black.withAlpha(128),
+                          child: IconButton(
+                            onPressed: _editRecipe,
+                            icon: const Icon(
+                              Icons.edit_rounded,
+                              color: Colors.white,
                             ),
                           ),
-                        ],
-                      ),
-                    ).animate().fade(), // Apply animation here
-                    const SizedBox(width: 8),
-                  ]
-                : null,
+                        ).animate().fade(), // Apply animation here
+                        const SizedBox(width: 8),
+                        CircleAvatar(
+                          backgroundColor: Colors.black.withAlpha(128),
+                          child: PopupMenuButton<String>(
+                            icon: const Icon(
+                              Icons.more_vert,
+                              color: Colors.white,
+                            ),
+                            onSelected: (value) {
+                              switch (value) {
+                                case 'delete':
+                                  _deleteRecipe();
+                                  break;
+                              }
+                            },
+                            itemBuilder: (context) => [
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.delete_outline,
+                                      color: theme.colorScheme.error,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Delete',
+                                      style:
+                                          TextStyle(color: theme.colorScheme.error),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ).animate().fade(), // Apply animation here
+                        const SizedBox(width: 8),
+                      ]
+                    : null,
           ),
           SliverToBoxAdapter(
             child: Padding(

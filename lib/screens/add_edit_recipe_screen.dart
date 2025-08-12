@@ -4,7 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:recipe_box/models/recipe.dart';
 import 'package:recipe_box/providers/recipe_provider.dart';
-import 'package:recipe_box/services/recipe_service.dart';
+import 'package:uuid/uuid.dart';
 
 class AddEditRecipeScreen extends StatefulWidget {
   final Recipe? recipe;
@@ -141,9 +141,7 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
           .toList();
 
       final recipe = Recipe(
-        id: _isEditing
-            ? widget.recipe!.id
-            : DateTime.now().millisecondsSinceEpoch.toString(),
+        id: _isEditing ? widget.recipe!.id : const Uuid().v4(),
         title: _titleController.text.trim(),
         imagePath: _selectedImagePath,
         imageUrl: _selectedImageUrl,
@@ -154,7 +152,8 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
         updatedAt: DateTime.now(),
       );
 
-      final recipeProvider = Provider.of<RecipeProvider>(context, listen: false);
+      final recipeProvider =
+          Provider.of<RecipeProvider>(context, listen: false);
 
       if (_isEditing) {
         await recipeProvider.updateRecipe(recipe);
@@ -390,12 +389,12 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
                   ),
                 ),
                 IconButton(
-                    onPressed: () => _removeIngredientField(i),
-                    icon: Icon(
-                      Icons.remove_circle_outline,
-                      color: theme.colorScheme.error,
-                    ),
+                  onPressed: () => _removeIngredientField(i),
+                  icon: Icon(
+                    Icons.remove_circle_outline,
+                    color: theme.colorScheme.error,
                   ),
+                ),
               ],
             ),
           ),
@@ -470,12 +469,12 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
                   ),
                 ),
                 IconButton(
-                    onPressed: () => _removeStepField(i),
-                    icon: Icon(
-                      Icons.remove_circle_outline,
-                      color: theme.colorScheme.error,
-                    ),
+                  onPressed: () => _removeStepField(i),
+                  icon: Icon(
+                    Icons.remove_circle_outline,
+                    color: theme.colorScheme.error,
                   ),
+                ),
               ],
             ),
           ),

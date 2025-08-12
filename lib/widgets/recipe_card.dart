@@ -38,15 +38,31 @@ class RecipeCard extends StatelessWidget {
                     ? Image.network(
                         recipe.imageUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            _buildPlaceholderImage(theme),
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                  : null,
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          // In a real app, you would log this error to a crash reporting service
+                          debugPrint('Error loading network image: $error');
+                          return _buildPlaceholderImage(theme);
+                        },
                       )
                     : (recipe.imagePath != null && recipe.imagePath!.isNotEmpty)
                         ? Image.file(
                             File(recipe.imagePath!),
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                _buildPlaceholderImage(theme),
+                            errorBuilder: (context, error, stackTrace) {
+                              // In a real app, you would log this error to a crash reporting service
+                              debugPrint('Error loading file image: $error');
+                              return _buildPlaceholderImage(theme);
+                            },
                           )
                         : _buildPlaceholderImage(theme),
               ),

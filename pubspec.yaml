@@ -15,7 +15,8 @@ dependencies:
   image_picker: '>=1.1.2'
   flutter_animate: ^4.5.0
   material_symbols_icons: ^4.2858.1
-  provider: ^6.0.0 # Added this line
+  provider: ^6.0.0
+  uuid: ^4.0.0 # For UUID generation
 
 dev_dependencies:
   flutter_test:

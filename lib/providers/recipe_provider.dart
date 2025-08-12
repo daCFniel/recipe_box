@@ -33,8 +33,9 @@ class RecipeProvider extends ChangeNotifier {
   // Add a new recipe
   Future<void> addRecipe(Recipe recipe) async {
     try {
-      await _recipeService!.addRecipe(recipe);
-      await loadRecipes(); // Reload recipes after adding
+      _recipes.add(recipe);
+      await _recipeService!.saveRecipes(_recipes);
+      notifyListeners();
     } catch (e) {
       rethrow;
     }
@@ -43,8 +44,12 @@ class RecipeProvider extends ChangeNotifier {
   // Update an existing recipe
   Future<void> updateRecipe(Recipe updatedRecipe) async {
     try {
-      await _recipeService!.updateRecipe(updatedRecipe);
-      await loadRecipes(); // Reload recipes after updating
+      final index = _recipes.indexWhere((r) => r.id == updatedRecipe.id);
+      if (index != -1) {
+        _recipes[index] = updatedRecipe;
+        await _recipeService!.saveRecipes(_recipes);
+        notifyListeners();
+      }
     } catch (e) {
       rethrow;
     }
@@ -53,8 +58,8 @@ class RecipeProvider extends ChangeNotifier {
   // Delete a recipe
   Future<void> deleteRecipe(String recipeId) async {
     try {
-      await _recipeService!.deleteRecipe(recipeId);
       _recipes.removeWhere((recipe) => recipe.id == recipeId);
+      await _recipeService!.saveRecipes(_recipes);
       notifyListeners(); // Notify listeners after removing the recipe
     } catch (e) {
       rethrow;

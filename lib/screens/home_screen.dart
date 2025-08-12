@@ -7,6 +7,7 @@ import 'package:recipe_box/screens/add_edit_recipe_screen.dart';
 import 'package:recipe_box/widgets/recipe_card.dart';
 import 'package:provider/provider.dart'; // Import provider
 import 'package:recipe_box/providers/recipe_provider.dart'; // Import RecipeProvider
+import 'package:recipe_box/widgets/gradient_fab.dart'; // Import GradientFab
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -44,15 +45,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _navigateToRecipeDetail(Recipe recipe) async {
-    final result = await Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => RecipeDetailScreen(recipe: recipe),
       ),
     );
-    if (result == true) {
-      Provider.of<RecipeProvider>(context, listen: false).loadRecipes();
-    }
   }
 
   @override
@@ -145,12 +143,10 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: GradientFab(
         onPressed: _navigateToAddRecipe,
-        backgroundColor: const Color.fromARGB(255, 118, 89, 146),
-        foregroundColor: const Color.fromARGB(255, 226, 226, 226),
-        icon: const Icon(Icons.add),
-        label: const Text('Add Recipe'),
+        icon: Icons.add,
+        label: 'Add Recipe',
       ).animate().scale().fadeIn(),
     );
   }
