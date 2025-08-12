@@ -172,7 +172,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
-                _recipe.title,
+                _recipe.title ?? '',
                 style: theme.textTheme.titleLarge?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -297,7 +297,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (_recipe.prepInstructions.isNotEmpty) ...[
+                  if (_recipe.prepInstructions?.isNotEmpty ?? false) ...[
                     _buildSection(
                       title: 'Prep Instructions',
                       icon: Icons.checklist_rtl_rounded,
@@ -310,7 +310,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          _recipe.prepInstructions,
+                          _recipe.prepInstructions ?? '',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSecondaryContainer,
                           ),
@@ -319,7 +319,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     ),
                     const SizedBox(height: 24),
                   ],
-                  if (_recipe.ingredients.isNotEmpty) ...[
+                  if (_recipe.ingredients?.isNotEmpty ?? false) ...[
                     _buildSection(
                       title: 'Ingredients',
                       icon: Icons.list_alt_rounded,
@@ -337,7 +337,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                         ),
                       ),
                       child: IngredientsList(
-                        ingredients: _recipe.ingredients,
+                        ingredients: _recipe.ingredients ?? [],
                         onIngredientChanged: (ingredient, isChecked) {
                           setState(() {
                             ingredient.isChecked = isChecked;
@@ -348,12 +348,12 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     ),
                     const SizedBox(height: 24),
                   ],
-                  if (_recipe.cookingSteps.isNotEmpty)
+                  if (_recipe.cookingSteps?.isNotEmpty ?? false)
                     _buildSection(
                       title: 'Cooking Instructions',
                       icon: Icons.format_list_numbered_rounded,
                       theme: theme,
-                      child: CookingSteps(steps: _recipe.cookingSteps),
+                      child: CookingSteps(steps: _recipe.cookingSteps!),
                     ),
                 ],
               ),

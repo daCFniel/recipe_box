@@ -23,7 +23,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     // Initialize the provider and load recipes
-    Provider.of<RecipeProvider>(context, listen: false).initialize();
+    
   }
 
   @override
@@ -113,9 +113,7 @@ class _HomePageState extends State<HomePage> {
             child: Consumer<RecipeProvider>(
               builder: (context, recipeProvider, child) {
                 final filteredRecipes = recipeProvider.recipes.where((recipe) {
-                  return recipe.title
-                      .toLowerCase()
-                      .contains(_searchController.text.toLowerCase());
+                  return recipe.title?.toLowerCase().contains(_searchController.text.toLowerCase()) ?? false;
                 }).toList();
 
                 if (recipeProvider.isLoading) {

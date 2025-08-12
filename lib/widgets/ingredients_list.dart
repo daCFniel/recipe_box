@@ -72,7 +72,7 @@ class IngredientsList extends StatelessWidget {
                             decorationColor: theme.colorScheme.onSurfaceVariant,
                           ),
                           child: Text(
-                            ingredients[i].name,
+                            ingredients[i].name ?? '',
                             style: const TextStyle(
                               fontWeight: FontWeight.w500,
                             ),

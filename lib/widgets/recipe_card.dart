@@ -73,7 +73,7 @@ class RecipeCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    recipe.title,
+                    recipe.title ?? '',
                     style: theme.textTheme.titleLarge,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -88,7 +88,7 @@ class RecipeCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${recipe.ingredients.length} ingredients',
+                        '${recipe.ingredients?.length ?? 0} ingredients',
                         style: theme.textTheme.bodyMedium,
                       ),
                       const SizedBox(width: 16),
@@ -99,7 +99,7 @@ class RecipeCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${recipe.cookingSteps.length} steps',
+                        '${recipe.cookingSteps?.length ?? 0} steps',
                         style: theme.textTheme.bodyMedium,
                       ),
                     ],

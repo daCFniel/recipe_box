@@ -1,92 +1,51 @@
-import 'dart:convert';
+import 'package:isar/isar.dart';
 
+part 'recipe.g.dart';
+
+@embedded
 class Ingredient {
-  final String name;
-  bool isChecked;
+  String? name;
+  bool isChecked = false;
 
-  Ingredient({
-    required this.name,
-    this.isChecked = false,
-  });
-
-  Map<String, dynamic> toJson() => {
-    'name': name,
-    'isChecked': isChecked,
-  };
-
-  factory Ingredient.fromJson(Map<String, dynamic> json) => Ingredient(
-    name: json['name'] ?? '',
-    isChecked: json['isChecked'] ?? false,
-  );
+  Ingredient({this.name});
 }
 
+@collection
 class Recipe {
-  final String id;
-  String title;
+  Id id = Isar.autoIncrement;
+  String? title;
   String? imagePath;
   String? imageUrl;
-  List<Ingredient> ingredients;
-  String prepInstructions;
-  List<String> cookingSteps;
-  DateTime createdAt;
-  DateTime updatedAt;
+  List<Ingredient>? ingredients;
+  String? prepInstructions;
+  List<String>? cookingSteps;
+  DateTime? createdAt;
+  DateTime? updatedAt;
 
+  // Constructor for creating new recipes
   Recipe({
-    required this.id,
-    required this.title,
+    this.title,
     this.imagePath,
     this.imageUrl,
     List<Ingredient>? ingredients,
-    this.prepInstructions = '',
+    this.prepInstructions,
     List<String>? cookingSteps,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) : 
-    ingredients = ingredients ?? [],
-    cookingSteps = cookingSteps ?? [],
-    createdAt = createdAt ?? DateTime.now(),
-    updatedAt = updatedAt ?? DateTime.now();
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'title': title,
-    'imagePath': imagePath,
-    'imageUrl': imageUrl,
-    'ingredients': ingredients.map((i) => i.toJson()).toList(),
-    'prepInstructions': prepInstructions,
-    'cookingSteps': cookingSteps,
-    'createdAt': createdAt.toIso8601String(),
-    'updatedAt': updatedAt.toIso8601String(),
-  };
-
-  factory Recipe.fromJson(Map<String, dynamic> json) => Recipe(
-    id: json['id'] ?? '',
-    title: json['title'] ?? '',
-    imagePath: json['imagePath'],
-    imageUrl: json['imageUrl'],
-    ingredients: (json['ingredients'] as List?)
-        ?.map((i) => Ingredient.fromJson(i))
-        .toList() ?? [],
-    prepInstructions: json['prepInstructions'] ?? '',
-    cookingSteps: List<String>.from(json['cookingSteps'] ?? []),
-    createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
-    updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
-  );
-
-  String toJsonString() => json.encode(toJson());
-
-  factory Recipe.fromJsonString(String jsonString) =>
-      Recipe.fromJson(json.decode(jsonString));
+    this.createdAt,
+    this.updatedAt,
+  }) : this.ingredients = ingredients ?? [],
+       this.cookingSteps = cookingSteps ?? [];
 
   void resetIngredients() {
-    for (final ingredient in ingredients) {
-      ingredient.isChecked = false;
+    if (ingredients != null) {
+      for (final ingredient in ingredients!) {
+        ingredient.isChecked = false;
+      }
     }
     updatedAt = DateTime.now();
   }
 
   Recipe copyWith({
-    String? id,
+    Id? id,
     String? title,
     String? imagePath,
     String? imageUrl,
@@ -95,15 +54,18 @@ class Recipe {
     List<String>? cookingSteps,
     DateTime? createdAt,
     DateTime? updatedAt,
-  }) => Recipe(
-    id: id ?? this.id,
-    title: title ?? this.title,
-    imagePath: imagePath ?? this.imagePath,
-    imageUrl: imageUrl ?? this.imageUrl,
-    ingredients: ingredients ?? this.ingredients,
-    prepInstructions: prepInstructions ?? this.prepInstructions,
-    cookingSteps: cookingSteps ?? this.cookingSteps,
-    createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
-  );
+  }) {
+    final recipe = Recipe(
+      title: title ?? this.title,
+      imagePath: imagePath ?? this.imagePath,
+      imageUrl: imageUrl ?? this.imageUrl,
+      ingredients: ingredients ?? this.ingredients,
+      prepInstructions: prepInstructions ?? this.prepInstructions,
+      cookingSteps: cookingSteps ?? this.cookingSteps,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+    recipe.id = id ?? this.id;
+    return recipe;
+  }
 }

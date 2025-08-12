@@ -4,7 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:recipe_box/models/recipe.dart';
 import 'package:recipe_box/providers/recipe_provider.dart';
-import 'package:uuid/uuid.dart';
+
 
 class AddEditRecipeScreen extends StatefulWidget {
   final Recipe? recipe;
@@ -44,17 +44,17 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
 
   void _loadExistingRecipe() {
     final recipe = widget.recipe!;
-    _titleController.text = recipe.title;
-    _prepController.text = recipe.prepInstructions;
+    _titleController.text = recipe.title ?? '';
+    _prepController.text = recipe.prepInstructions ?? '';
     _selectedImagePath = recipe.imagePath;
     _selectedImageUrl = recipe.imageUrl;
 
-    for (final ingredient in recipe.ingredients) {
+    for (final ingredient in recipe.ingredients ?? []) {
       final controller = TextEditingController(text: ingredient.name);
       _ingredientControllers.add(controller);
     }
 
-    for (final step in recipe.cookingSteps) {
+    for (final step in recipe.cookingSteps!) {
       final controller = TextEditingController(text: step);
       _stepControllers.add(controller);
     }
@@ -128,41 +128,43 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
 
     setState(() => _isLoading = true);
 
+    final recipeProvider = Provider.of<RecipeProvider>(context, listen: false);
+
+    final ingredients = _ingredientControllers
+        .map((c) => c.text.trim())
+        .where((text) => text.isNotEmpty)
+        .map((name) => Ingredient(name: name))
+        .toList();
+
+    final steps = _stepControllers
+        .map((c) => c.text.trim())
+        .where((text) => text.isNotEmpty)
+        .toList();
+
+    final recipeToSave = Recipe(
+      title: _titleController.text,
+      imagePath: _selectedImagePath,
+      imageUrl: _selectedImageUrl,
+      ingredients: ingredients,
+      prepInstructions: _prepController.text,
+      cookingSteps: steps,
+      createdAt: widget.recipe?.createdAt, // Preserve original creation date
+      updatedAt: DateTime.now(),
+    );
+
+    // If it's an existing recipe, assign its existing Isar ID
+    if (widget.recipe != null) {
+      recipeToSave.id = widget.recipe!.id;
+    }
+
     try {
-      final ingredients = _ingredientControllers
-          .map((c) => c.text.trim())
-          .where((text) => text.isNotEmpty)
-          .map((name) => Ingredient(name: name))
-          .toList();
-
-      final steps = _stepControllers
-          .map((c) => c.text.trim())
-          .where((text) => text.isNotEmpty)
-          .toList();
-
-      final recipe = Recipe(
-        id: _isEditing ? widget.recipe!.id : const Uuid().v4(),
-        title: _titleController.text.trim(),
-        imagePath: _selectedImagePath,
-        imageUrl: _selectedImageUrl,
-        ingredients: ingredients,
-        prepInstructions: _prepController.text.trim(),
-        cookingSteps: steps,
-        createdAt: _isEditing ? widget.recipe!.createdAt : DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      final recipeProvider =
-          Provider.of<RecipeProvider>(context, listen: false);
-
       if (_isEditing) {
-        await recipeProvider.updateRecipe(recipe);
+        await recipeProvider.updateRecipe(recipeToSave);
       } else {
-        await recipeProvider.addRecipe(recipe);
+        await recipeProvider.addRecipe(recipeToSave);
       }
-
       if (mounted) {
-        Navigator.pop(context, true);
+        Navigator.pop(context, true); // Indicate success
       }
     } catch (e) {
       if (mounted) {
