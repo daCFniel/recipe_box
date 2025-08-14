@@ -19,6 +19,8 @@ dependencies:
   isar_flutter_libs: ^3.1.0+1
   path_provider: ^2.1.3
   logging: ^1.0.0
+  cached_network_image: ^3.3.1
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -26,30 +28,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   isar_generator: ^3.1.0+1
   build_runner: ^2.4.10
-  mockito: ^5.0.0 # Add mockito
-  flutter_launcher_icons: ^0.14.4 # Add flutter_launcher_icons
+  mockito: ^5.0.0 
 
 flutter:
   uses-material-design: true
-
-# Configuration for flutter_launcher_icons
-flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  image_path: "assets/icon/icon.png" # Placeholder: You'll need to create this file
-  min_sdk_android: 21 # Minimum Android SDK version
-  android_adaptive_icon_background: "#B39DDB" # Your theme's purple color for adaptive icon background
-  adaptive_icon_foreground: "assets/icon/icon.png" # Explicitly set foreground for adaptive icon
-  remove_alpha_ios: true # Remove alpha channel for iOS
-  web:
-    generate: true
-    image_path: "assets/icon/icon.png" # Placeholder
-    background_color: "#B39DDB" # Your theme's purple color
-    theme_color: "#B39DDB" # Your theme's purple color
-  windows:
-    generate: true
-    image_path: "assets/icon/icon.png" # Placeholder
-    icon_size: 48 # min 48px, max 256px
-  macos:
-    generate: true
-    image_path: "assets/icon/icon.png" # Placeholder

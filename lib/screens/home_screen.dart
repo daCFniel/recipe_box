@@ -23,7 +23,6 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     // Initialize the provider and load recipes
-    
   }
 
   @override
@@ -58,93 +57,102 @@ class _HomePageState extends State<HomePage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              size: 35,
-              Symbols.lunch_dining,
-              color: theme.textTheme.headlineMedium?.color,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Recipe Box',
-              style: theme.textTheme.headlineMedium,
-            ),
-          ],
-        ),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (query) {
-                // Filter recipes based on the query
-                // This part needs to be updated to filter the provider's recipes
-                // For now, it will just trigger a rebuild.
-                setState(() {});
-              },
-              decoration: InputDecoration(
-                hintText: 'Search recipes...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {}); // Trigger rebuild to clear filter
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                  borderSide: BorderSide.none,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  size: 35,
+                  Symbols.lunch_dining,
+                  color: theme.textTheme.headlineMedium?.color,
                 ),
-                filled: true,
-                fillColor: theme.colorScheme.surfaceContainerHighest,
+                const SizedBox(width: 8),
+                Text(
+                  'Recipe Box',
+                  style: theme.textTheme.headlineMedium,
+                ),
+              ],
+            ),
+            centerTitle: true,
+            floating: true, // Make the app bar float
+            snap: true, // Make it snap into view
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (query) {
+                  // Filter recipes based on the query
+                  // This part needs to be updated to filter the provider's recipes
+                  // For now, it will just trigger a rebuild.
+                  setState(() {});
+                },
+                decoration: InputDecoration(
+                  hintText: 'Search recipes...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {}); // Trigger rebuild to clear filter
+                          },
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30.0),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceContainerHighest,
+                ),
               ),
             ),
           ),
-          Expanded(
-            child: Consumer<RecipeProvider>(
-              builder: (context, recipeProvider, child) {
-                final filteredRecipes = recipeProvider.recipes.where((recipe) {
-                  return recipe.title?.toLowerCase().contains(_searchController.text.toLowerCase()) ?? false;
-                }).toList();
+          Consumer<RecipeProvider>(
+            builder: (context, recipeProvider, child) {
+              final filteredRecipes = recipeProvider.recipes.where((recipe) {
+                return recipe.title
+                        ?.toLowerCase()
+                        .contains(_searchController.text.toLowerCase()) ??
+                    false;
+              }).toList();
 
-                if (recipeProvider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (filteredRecipes.isEmpty) {
-                  return _buildEmptyState(theme);
-                } else {
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: filteredRecipes.length,
-                    itemBuilder: (context, index) {
-                      final recipe = filteredRecipes[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: RecipeCard(
-                          recipe: recipe,
-                          onTap: () => _navigateToRecipeDetail(recipe),
-                        ),
-                      ).animate().fade();
-                    },
-                  );
-                }
-              },
-            ),
+              if (recipeProvider.isLoading) {
+                return const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()));
+              } else if (filteredRecipes.isEmpty) {
+                return SliverFillRemaining(child: _buildEmptyState(theme));
+              } else {
+                return SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final recipe = filteredRecipes[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: RecipeCard(
+                            recipe: recipe,
+                            onTap: () => _navigateToRecipeDetail(recipe),
+                          ),
+                        ).animate().fade();
+                      },
+                      childCount: filteredRecipes.length,
+                    ),
+                  ),
+                );
+              }
+            },
           ),
         ],
       ),
       floatingActionButton: GradientFab(
         onPressed: _navigateToAddRecipe,
         icon: Icons.add,
-        label: 'Add Recipe',
       ).animate().scale().fadeIn(),
     );
   }
